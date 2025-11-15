@@ -5,7 +5,7 @@
 //  Created by Michael Long on 11/18/24.
 //
 
-import Navigator
+import NavigatorUI
 import SwiftUI
 
 class SettingsRootViewModel: ObservableObject {
@@ -20,7 +20,8 @@ struct SettingsRootView: View {
     var body: some View {
         ManagedNavigationStack(scene: RootTabs.settings.id) {
             SettingsView(name: "Root Settings")
-                .navigationDestinationAutoReceive(SettingsDestinations.self)
+                .navigationTitle("Settings")
+                .navigationAutoReceive(SettingsDestinations.self)
         }
     }
 }
@@ -42,7 +43,7 @@ struct SettingsView: View {
             }
 
             Section("Navigation Actions") {
-                NavigationLink(value: SettingsDestinations.page2) {
+                NavigationLink(to: SettingsDestinations.page2) {
                     Text("Link to Settings Page 2!")
                 }
                 Button("Navigator Push to Settings Page 3!") {
@@ -52,10 +53,22 @@ struct SettingsView: View {
                     triggerPage3.toggle()
                 }
                 .navigate(trigger: $triggerPage3, destination: SettingsDestinations.page3)
-//                Button("Navigator Push 2, 3 (error)") {
-//                    navigator.push(SettingsDestinations.page2)
-//                    navigator.push(SettingsDestinations.page3)
-//                }
+                //                Button("Navigator Push 2, 3 (error)") {
+                //                    navigator.push(SettingsDestinations.page2)
+                //                    navigator.push(SettingsDestinations.page3)
+                //                }
+            }
+
+            Section("Unregistered Destination Actions") {
+                NavigationLink(to: UnregisteredDestinations.page1) {
+                    Text("Link to Unregistered Page 1!")
+                }
+                Button("Button Push to Unregistered Page 2!") {
+                    navigator.navigate(to: UnregisteredDestinations.page2)
+                }
+                Button("Button Present Unregistered Page 2!") {
+                    navigator.navigate(to: UnregisteredDestinations.page2, method: .sheet)
+                }
             }
 
             Section("Send Actions") {
@@ -91,9 +104,9 @@ struct SettingsView: View {
         }
         .navigationTitle(name)
         // establishes a standard checkpoint
-        .navigationCheckpoint(.settings)
+        .navigationCheckpoint(KnownCheckpoints.settings)
         // establishes a checkpoint with a return value handler
-        .navigationCheckpoint(.settings) { (result: Int) in
+        .navigationCheckpoint(KnownCheckpoints.settings) { result in
             returnValue = result
         }
     }
@@ -112,7 +125,7 @@ struct Page2SettingsView: View {
                     .foregroundStyle(.secondary)
             }
             Section("Navigation Actions") {
-                NavigationLink(value: SettingsDestinations.page3) {
+                NavigationLink(to: SettingsDestinations.page3) {
                     Text("Link to Test Page 3!")
                 }
             }
@@ -120,9 +133,9 @@ struct Page2SettingsView: View {
             ContentCheckpointSection()
             ContentPopSection()
         }
-        .navigationCheckpoint(.page2)
+        .navigationCheckpoint(KnownCheckpoints.page2)
         // establishes a second checkpoint with a return value handler
-        .navigationCheckpoint(.settings) { (result: Int) in
+        .navigationCheckpoint(KnownCheckpoints.settings) { result in
             returnValue = result
         }
         .navigationTitle("Page 2")
@@ -140,29 +153,27 @@ struct Page3SettingsView: View {
 }
 
 struct SettingsSheetView: View {
+    @Environment(\.navigator) var navigator: Navigator
     var body: some View {
         List {
             Section("Checkpoint Actions") {
-                WithNavigator { navigator in
-                    Button("Return to Settings Checkpoint Value 5") {
-                        navigator.returnToCheckpoint(.settings, value: 5)
-                    }
-                    Button("Return to Settings Checkpoint Value 0") {
-                        navigator.returnToCheckpoint(.settings, value: 0)
-                    }
-                    Button("Return to Missing Settings Handler 0.0") {
-                        navigator.returnToCheckpoint(.settings, value: 0.0)
-                    }
+                Button("Return to Settings Checkpoint Value 5") {
+                    navigator.returnToCheckpoint(KnownCheckpoints.settings, value: 5)
                 }
+                Button("Return to Settings Checkpoint Value 0") {
+                    navigator.returnToCheckpoint(KnownCheckpoints.settings, value: 0)
+                }
+                // Button("Return to Missing Settings Handler 0.0") {
+                // Cannot convert value of type 'Double' to expected argument type 'Int'
+                // navigator.returnToCheckpoint(KnownCheckpoints.settings, value: 0.0)
+                // }
             }
             Section("Send Actions") {
-                WithNavigator { navigator in
-                    Button("Send Tab Home") {
-                        navigator.send(
-                            NavigationAction.dismissAny,
-                            RootTabs.home
-                        )
-                    }
+                Button("Send Tab Home") {
+                    navigator.send(
+                        NavigationAction.dismissAny,
+                        RootTabs.home
+                    )
                 }
             }
             ContentSheetSection()
@@ -182,22 +193,22 @@ struct SettingsExternalView: View {
 }
 
 struct PresentLoadingView: View {
-    @State var Loading: Bool = true
+    @State var loading: Bool = true
     var body: some View {
         ManagedNavigationStack {
             List {
-                if Loading {
+                if loading {
                     Text("Loading...")
                         .task {
                             try? await Task.sleep(for: .seconds(3))
-                            self.Loading = false
+                            self.loading = false
                         }
                 } else {
                     Text("Loaded...")
                         .navigationResume() // resume when this view appears
                 }
             }
-            .navigationDestinationAutoReceive(LoadingDestinations.self)
+            .navigationAutoReceive(LoadingDestinations.self)
             .navigationTitle("Presented View")
         }
     }

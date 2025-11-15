@@ -5,7 +5,7 @@
 //  Created by Michael Long on 1/25/25.
 //
 
-import Navigator
+import NavigatorUI
 import SwiftUI
 
 public struct RootSplitViewRouter: NavigationRouteHandling {
@@ -67,6 +67,8 @@ public struct RootSplitViewRouter: NavigationRouteHandling {
                 .popAll(in: RootTabs.settings.id),
                 .send(SettingsDestinations.page3)
             )
+        case .external:
+            navigator.push(HomeDestinations.external)
         }
     }
 }

@@ -5,7 +5,7 @@
 //  Created by Michael Long on 1/8/25.
 //
 
-import Navigator
+import NavigatorUI
 import SwiftUI
 
 enum AccountDestinations {
@@ -13,8 +13,8 @@ enum AccountDestinations {
     case disclaimers(Account)
 }
 
-extension AccountDestinations: NavigationDestination {
-    public var view: some View {
+nonisolated extension AccountDestinations: NavigationDestination {
+    public var body: some View {
         switch self {
         case .details(let account):
             AccountDetailsView(account: account)
@@ -36,7 +36,7 @@ struct PresentAccountDestinationsView: View {
                 presentView = .disclaimers(account)
             }
             .sheet(item: $presentView) { destination in
-                destination()
+                destination
             }
         }
     }
@@ -51,7 +51,6 @@ struct AccountsView: View {
                 NavigationLink("Disclaimers", value: AccountDestinations.disclaimers(account))
             }
         }
-        .navigationDestination(AccountDestinations.self)
     }
 }
 
@@ -69,4 +68,6 @@ struct AccountDisclaimersView: View {
     }
 }
 
-struct Account: Hashable {}
+nonisolated struct Account: Identifiable, Hashable {
+    let id: UUID = .init()
+}

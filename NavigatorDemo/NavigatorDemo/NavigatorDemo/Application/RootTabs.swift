@@ -5,16 +5,14 @@
 //  Created by Michael Long on 1/27/25.
 //
 
-import Navigator
+import NavigatorUI
 import SwiftUI
 
-enum RootTabs: Int, Codable {
+nonisolated enum RootTabs: Int, Codable, Identifiable, NavigationDestination {
+
     case home
     case examples
     case settings
-}
-
-extension RootTabs: Identifiable {
 
     static var tabs: [RootTabs] {
         [.home, .examples, .settings]
@@ -50,12 +48,10 @@ extension RootTabs: Identifiable {
         }
     }
 
-}
-
-extension RootTabs: NavigationDestination {
-    var view: some View {
+    var body: some View {
         RootTabsViewBuilder(destination: self)
     }
+    
 }
 
 private struct RootTabsViewBuilder: View {
@@ -76,7 +72,7 @@ private struct RootTabsViewBuilder: View {
 // following exploration into persisted state
 
 //extension RootTabs: NavigationDestination {
-//    var view: some View {
+//    var body: some View {
 //        WithHomeDependencies { resolver in
 //            RootTabsViewBuilder(destination: self, resolver: resolver)
 //        }

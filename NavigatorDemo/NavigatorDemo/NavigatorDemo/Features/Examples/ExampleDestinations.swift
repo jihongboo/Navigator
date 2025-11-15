@@ -5,7 +5,7 @@
 //  Created by Michael Long on 2/4/25.
 //
 
-import Navigator
+import NavigatorUI
 import SwiftUI
 
 public enum ExampleDestinations: String, NavigationDestination, CaseIterable {
@@ -14,7 +14,7 @@ public enum ExampleDestinations: String, NavigationDestination, CaseIterable {
     case callback
     case transition
 
-    public var view: some View {
+    public var body: some View {
         switch self {
         case .binding:
             BindingExampleView()

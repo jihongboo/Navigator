@@ -5,7 +5,7 @@
 //  Created by Michael Long on 1/26/25.
 //
 
-import Navigator
+import NavigatorUI
 import SwiftUI
 
 enum AppRootType: Int {
@@ -16,10 +16,11 @@ enum AppRootType: Int {
 extension AppRootType: NavigationDestination {
 
     // Provides the correct view for this type
-    var view: some View {
+    var body: some View {
         switch self {
         case .tabbed:
             RootTabView()
+
         case .split:
             RootSplitView()
         }

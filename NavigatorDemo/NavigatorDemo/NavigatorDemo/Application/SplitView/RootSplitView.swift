@@ -5,7 +5,7 @@
 //  Created by Michael Long on 1/25/25.
 //
 
-import Navigator
+import NavigatorUI
 import SwiftUI
 
 struct RootSplitView: View {
@@ -15,7 +15,7 @@ struct RootSplitView: View {
             SidebarView(selectedTab: $selectedTab)
                 .navigationSplitViewColumnWidth(200)
         } detail: {
-            selectedTab?()
+            selectedTab
         }
         .onNavigationReceive(assign: $selectedTab, delay: 0.8) // switching root views needs a little more time
         // set route handler for this view type
@@ -31,7 +31,7 @@ private struct SidebarView: View {
         List(selection: $selectedTab) {
             Section("Menu") {
                 ForEach(RootTabs.sidebar) { tab in
-                    NavigationLink(value: tab) {
+                    NavigationLink(to: tab) {
                         Label(tab.title, systemImage: tab.image)
                     }
                 }

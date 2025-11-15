@@ -5,10 +5,10 @@
 //  Created by Michael Long on 1/19/25.
 //
 
-import Navigator
+import NavigatorUI
 import SwiftUI
 
-public enum KnownRoutes: NavigationRoutes {
+nonisolated public enum KnownRoutes: NavigationRoutes {
     case auth
     case home
     case homePage2
@@ -18,4 +18,5 @@ public enum KnownRoutes: NavigationRoutes {
     case settings
     case settingsPage2
     case settingsPage3
+    case external
 }

@@ -5,7 +5,7 @@
 //  Created by Michael Long on 11/10/24.
 //
 
-import Navigator
+import NavigatorUI
 import SwiftUI
 
 struct CustomContentView: View {
@@ -20,15 +20,27 @@ struct CustomContentView: View {
 struct ContentSheetSection: View {
     @Environment(\.navigator) var navigator: Navigator
     @State var showSheet: Bool = false
-    @State var dismiss: Bool = false
+    @State var dismissFlag: Bool = false
     @State var dismissAny: Bool = false
+    @State var presentSheet: HomeDestinations?
+    @State var presentCover: HomeDestinations?
     var body: some View {
         Section("Presentation Actions") {
-            Button("Present Navigation View via Sheet") {
+            Button("Present Sheet (Programatic)") {
                 navigator.navigate(to: HomeDestinations.presented1)
             }
 
-            Button("Present Locked Navigation View via Cover") {
+            Button("Present Sheet (Binding)") {
+                presentSheet = HomeDestinations.presented1
+            }
+            .navigate(to: $presentSheet)
+
+            Button("Present Sheet as Cover (Binding)") {
+                presentCover = HomeDestinations.presented1
+            }
+            .navigate(to: $presentCover, method: .cover)
+
+            Button("Present Locked Cover (Programatic)") {
                 navigator.navigate(to: HomeDestinations.presented2)
             }
 
@@ -40,10 +52,28 @@ struct ContentSheetSection: View {
                     .managedPresentationView()
             }
 
-            Button("Dismiss", role: .cancel) {
-                dismiss = true
+            Button("Present Root Sheet") {
+                navigator.send(AppRootDestinations.demo)
             }
-            .navigationDismiss(trigger: $dismiss)
+
+            Button("Dismiss via Navigator", role: .cancel) {
+                navigator.dismiss()
+            }
+            .disabled(!navigator.isPresented)
+
+            Button("Dismiss via NavigationDismiss", role: .cancel) {
+                dismissFlag = true
+            }
+            .navigationDismiss(trigger: $dismissFlag)
+            .disabled(!navigator.isPresented)
+
+            Button("Dismiss w/o Animation", role: .cancel) {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                _ = withTransaction(transaction) {
+                    navigator.dismiss()
+                }
+            }
             .disabled(!navigator.isPresented)
 
             Button("Dismiss Any") {
@@ -62,32 +92,35 @@ struct ContentCheckpointSection: View {
     var body: some View {
         Section("Checkpoint Actions") {
             Button("Return To Checkpoint Home") {
-                navigator.returnToCheckpoint(.home)
+                navigator.returnToCheckpoint(KnownCheckpoints.home)
             }
-            .disabled(!navigator.canReturnToCheckpoint(.home))
+            .disabled(!navigator.canReturnToCheckpoint(KnownCheckpoints.home))
 
             Button("Return To Checkpoint Page 2") {
                 returnToCheckpoint = true
             }
-            .navigationReturnToCheckpoint(trigger: $returnToCheckpoint, checkpoint: .page2)
-            .disabled(!navigator.canReturnToCheckpoint(.page2))
+            .navigationReturnToCheckpoint(trigger: $returnToCheckpoint, checkpoint: KnownCheckpoints.page2)
+            .disabled(!navigator.canReturnToCheckpoint(KnownCheckpoints.page2))
 
             Button("Return To Checkpoint Duplicate (1, 2)") {
-                navigator.returnToCheckpoint(.duplicate)
+                navigator.returnToCheckpoint(KnownCheckpoints.duplicate)
             }
-            .disabled(!navigator.canReturnToCheckpoint(.duplicate))
-
-            Button("Return To Checkpoint Settings") {
-                navigator.returnToCheckpoint(.settings)
-            }
-            .disabled(!navigator.canReturnToCheckpoint(.settings))
+            .disabled(!navigator.canReturnToCheckpoint(KnownCheckpoints.duplicate))
 
             Button("Return to Settings Checkpoint Value 9") {
-                navigator.returnToCheckpoint(.settings, value: 9)
+                navigator.returnToCheckpoint(KnownCheckpoints.settings, value: 9)
+            }
+
+            Button("Return to Settings w/o Animation") {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    navigator.returnToCheckpoint(KnownCheckpoints.settings, value: 9)
+                }
             }
 
             Button("Return To Unknown Checkpoint") {
-                navigator.returnToCheckpoint("unknown")
+                navigator.returnToCheckpoint(KnownCheckpoints.unknown)
             }
         }
     }
@@ -158,7 +191,7 @@ struct CustomSettingsSheetSection: View {
                 showSettings = .page3
             }
             .sheet(item: $showSettings) { destination in
-                destination()
+                destination
                     .managedPresentationView()
             }
         }

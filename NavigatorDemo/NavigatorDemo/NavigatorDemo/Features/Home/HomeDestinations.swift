@@ -1,25 +1,27 @@
 //
-//  TestPage.swift
-//  Nav5
+//  HomeDestinations.swift
 //
 //  Created by Michael Long on 11/10/24.
 //
 
-import Navigator
+import NavigatorUI
 import SwiftUI
 
-public enum HomeDestinations: NavigationDestination, Codable {
-    
+nonisolated public enum HomeDestinations: Codable, NavigationDestination {
+
     case home(String)
     case page2
     case page3
     case pageN(Int)
+    case mapped
     case external
+    case external2
+    case external3
     case presented1
     case presented2
 
     // Illustrates external mapping of destination type to views. See Settings for simple mapping.
-    public var view: some View {
+    public var body: some View {
         HomeDestinationsView(select: self)
     }
 
@@ -53,8 +55,23 @@ internal struct HomeDestinationsView: View {
             // Demonstrates passing dependency resolver to view and letting it do what's needed.
             HomePageNView(resolver: resolver, number: value)
 
+        case .mapped:
+            // Demonstrates using navigation map.
+            EmptyView()
+
         case .external:
-            // Demonstrates getting view itself from unknown source
+            // Demonstrates using NavigationProvidedDestination type to obtain views from a registered navigation view provider
+            HomeExternalViews.external
+
+        case .external2:
+            // Demonstrates getting a specific view from a registered navigation view provider
+            // and providing a specific placeholder view if view not found
+            NavigationProvidedView(for: HomeDestinations.external2) {
+                Text("External View Placeholder")
+            }
+
+        case .external3:
+            // Demonstrates old DI-specific getting view itself from unknown source
             resolver.homeExternalViewProvider.view(for: .external)
 
         case .presented1:
@@ -65,21 +82,25 @@ internal struct HomeDestinationsView: View {
             // This presented view can not be globally dismissed via navigation action, deep links, etc.
             NestedHomeContentView(title: "Via Cover")
                 .navigationLocked()
-
         }
     }
 }
 
 extension HomeDestinations {
-    // not required but shows possibilities in predefining navigation destination types
+
+    // not required but shows possibilities in predefining navigation destination methods
     public var method: NavigationMethod {
         switch self {
-        case .home, .page2, .page3, .pageN, .external:
+        case .home, .page2, .page3, .pageN, .mapped, .external, .external2, .external3:
             .push
         case .presented1:
-            .sheet
+            .managedSheet
         case .presented2:
-            .cover
+            .managedCover
         }
     }
+    
 }
+
+// convenience
+typealias Home = HomeDestinations

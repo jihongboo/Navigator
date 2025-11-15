@@ -5,7 +5,7 @@
 //  Created by Michael Long on 11/10/24.
 //
 
-import Navigator
+import NavigatorUI
 import SwiftUI
 
 class HomeRootViewModel: ObservableObject {
@@ -17,9 +17,6 @@ class HomeRootViewModel: ObservableObject {
         self.logger = resolver.logger
         logger.log("HomeRootViewModel initialized \(id)")
     }
-    deinit {
-        logger.log("HomeRootViewModel deinit \(id)")
-    }
 }
 
 struct HomeRootView: View {
@@ -27,11 +24,15 @@ struct HomeRootView: View {
     var body: some View {
         ManagedNavigationStack(scene: RootTabs.home.id) {
             HomeContentView(viewModel: HomeContentViewModel(resolver: viewModel.resolver, title: "Home Navigation"))
-                .navigationCheckpoint(.home)
-                .navigationDestination(HomeDestinations.self)
-                .onNavigationReceive { (destination: HomeDestinations, navigator) in
+                .navigationCheckpoint(KnownCheckpoints.home)
+                .onNavigationReceive { (destination: Home, navigator) in
                     navigator.navigate(to: destination)
                     return .auto
+                }
+                .navigationModifier(inherits: true) { destination in
+                    destination()
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbarBackground(.hidden, for: .navigationBar)
                 }
         }
     }
@@ -47,27 +48,43 @@ class HomeContentViewModel: ObservableObject {
 struct HomeContentView: View {
     @StateObject var viewModel: HomeContentViewModel
     @Environment(\.navigator) var navigator
+    @State var destination: Home?
     var body: some View {
         List {
             Section("Navigation Actions") {
-                NavigationLink(value: HomeDestinations.page2) {
+                NavigationLink(to: Home.page2) {
                     Text("Link to Home Page 2!")
                 }
-                NavigationLink(value: HomeDestinations.pageN(44)) {
+                NavigationLink(to: Home.pageN(44)) {
                     Text("Link to Home Page 44!")
                 }
-                NavigationLink(value: HomeDestinations.external) {
-                    Text("Link to External View!")
+                NavigationLink(to: Home.mapped) {
+                    Text("Link to Mapped View! (99)")
                 }
                 Button("Button Navigate to Home Page 55") {
-                    navigator.navigate(to: HomeDestinations.pageN(55))
+                    navigator.navigate(to: Home.pageN(55))
+                }
+                Button("Button Push to Home Page 56") {
+                    destination = .pageN(56)
+                }
+                .navigate(to: $destination)
+            }
+            Section("Externally Provided Views") {
+                NavigationLink(to: Home.external) {
+                    Text("Link to External View 1!")
+                }
+                NavigationLink(to: Home.external2) {
+                    Text("Link to External View 2!")
+                }
+                NavigationLink(to: MissingDestinations.missing) {
+                    Text("Link to Missing View Provider!")
                 }
             }
             Section("Send Actions") {
                 Button("Send Home Page 2, 3") {
                     navigator.send(
-                        HomeDestinations.page2,
-                        HomeDestinations.page3
+                        Home.page2,
+                        Home.page3
                     )
                 }
             }
@@ -84,7 +101,10 @@ struct HomeContentView: View {
             }
         }
         .navigationTitle(viewModel.title)
-        .navigationCheckpoint(.duplicate)
+        .navigationCheckpoint(KnownCheckpoints.duplicate)
+        .task {
+            print("HomeContentView")
+        }
     }
 }
 
@@ -111,10 +131,10 @@ struct HomePage2View: View {
     var body: some View {
         List {
             Section("Navigation Actions") {
-                NavigationLink(value: HomeDestinations.page3) {
+                NavigationLink(to: Home.page3) {
                     Text("Link to Home Page 3!")
                 }
-                NavigationLink(value: HomeDestinations.pageN(55)) {
+                NavigationLink(to: Home.pageN(55)) {
                     Text("Link to Home Page 55!")
                 }
             }
@@ -133,12 +153,11 @@ struct HomePage2View: View {
             ContentCheckpointSection()
             ContentPopSection()
         }
-        .navigationCheckpoint(.page2)
-        // shows a checkpoint with an action handler triggered on return
-        .navigationCheckpoint(.duplicate) {
+        .navigationCheckpoint(KnownCheckpoints.page2)
+        // shows a checkpoint with a void action handler triggered on return
+        .navigationCheckpoint(KnownCheckpoints.duplicate) {
             print("DUPLICATE ACTION")
         }
-//        .navigationCheckpoint(.page2, position: 1)
         .navigationTitle(viewModel.title)
     }
 }
@@ -149,11 +168,11 @@ struct HomePage3View: View {
     var body: some View {
         List {
             Section("Navigation Actions") {
-                NavigationLink(value: HomeDestinations.pageN(initialValue)) {
+                NavigationLink(to: Home.pageN(initialValue)) {
                     Text("Link to Home Page 66!")
                 }
                 Button("Button Push to Home Page 77") {
-                    navigator.push(HomeDestinations.pageN(77))
+                    navigator.push(Home.pageN(77))
                 }
             }
             ContentSheetSection()
@@ -185,9 +204,9 @@ struct HomePageNView: View {
                 Button("Send Home Page 2, 88, 99") {
                     navigator.send(
                         NavigationAction.popAll(in: RootTabs.home.id),
-                        HomeDestinations.page2,
-                        HomeDestinations.pageN(88),
-                        HomeDestinations.pageN(99)
+                        Home.page2,
+                        Home.pageN(88),
+                        Home.pageN(99)
                     )
                 }
                 Button("Route To Settings Page 2") {
@@ -205,11 +224,8 @@ struct HomePageNView: View {
 struct NestedHomeContentView: View {
     var title: String
     var body: some View {
-        ManagedNavigationStack {
-            // Demonstrates using destinations to build root views that may have dependencies.
-            HomeDestinations.home(title).view
-                .navigationDestination(HomeDestinations.self)
-        }
+        // Demonstrates using destinations to build root views that may have dependencies.
+        HomeDestinations.home(title)
     }
 }
 
@@ -217,7 +233,7 @@ struct NestedHomeContentView: View {
 #Preview {
     // Demonstrates using destinations to build root views that may have dependencies.
     // Also mocking network call results for these types.
-    RootTabs.home()
+    RootTabs.home
         .setAuthenticationRoot()
         .environment(\.homeDependencies, MockHomeResolver()
             .mock { "(M5)" }

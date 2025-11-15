@@ -5,8 +5,13 @@
 //  Created by Michael Long on 2/12/25.
 //
 
-import Navigator
+import NavigatorUI
 import SwiftUI
+
+extension KnownCheckpoints {
+    public static var homeReturningDouble: NavigationCheckpoint<Double> { checkpoint() }
+}
+
 
 struct CallbackExampleView: View {
     @State var value: Double = 0
@@ -32,7 +37,7 @@ struct CallbackExampleView: View {
                         action: {
                             navigator.navigate(to: CallbackDestinations.presented(value, .init {
                                 value = $0
-                                navigator.returnToCheckpoint(.home)
+                                navigator.returnToCheckpoint(KnownCheckpoints.home)
                             }))
                         })
                 }
@@ -43,7 +48,7 @@ struct CallbackExampleView: View {
                         action: {
                             navigator.navigate(to: CallbackDestinations.pushed(value, .init {
                                 value = $0
-                                navigator.returnToCheckpoint(.home)
+                                navigator.returnToCheckpoint(KnownCheckpoints.home)
                             }))
                         })
                 }
@@ -53,11 +58,10 @@ struct CallbackExampleView: View {
                     }
                 }
             }
-            .navigationDestination(CallbackDestinations.self)
             // illustrates returning to named checkpoint instead of trying to pop or dismiss
-            .navigationCheckpoint(.home)
+            .navigationCheckpoint(KnownCheckpoints.home)
             // illustrates returning to named checkpoint with value instead of using callback handler
-            .navigationCheckpoint(.home) { (value: Double) in
+            .navigationCheckpoint(KnownCheckpoints.homeReturningDouble) { value in
                 self.value = value
             }
             .navigationTitle("Callback Example")
@@ -65,12 +69,12 @@ struct CallbackExampleView: View {
     }
 }
 
-enum CallbackDestinations: NavigationDestination {
+nonisolated enum CallbackDestinations: NavigationDestination {
 
     case presented(Double, Callback<Double>)
     case pushed(Double, Callback<Double>)
 
-    var view: some View {
+    var body: some View {
         switch self {
         case .presented(let value, let callback):
             CallbackReturnView(value: value, handler: callback.handler)
@@ -87,6 +91,7 @@ enum CallbackDestinations: NavigationDestination {
             return .push
         }
     }
+    
 }
 
 struct CallbackReturnView: View {
@@ -110,12 +115,12 @@ struct CallbackReturnView: View {
                     title: "Return To Checkpoint With Value: \(Int(value))",
                     text: "Demonstrates bypassing the callback handler with returnToCheckpoint(:value:).",
                     action: {
-                        navigator.returnToCheckpoint(.home, value: value)
+                        navigator.returnToCheckpoint(KnownCheckpoints.homeReturningDouble, value: value)
                     })
             }
             Section {
                 Button("Dismiss") {
-                    navigator.returnToCheckpoint(.home)
+                    navigator.returnToCheckpoint(KnownCheckpoints.home)
                 }
             }
         }
