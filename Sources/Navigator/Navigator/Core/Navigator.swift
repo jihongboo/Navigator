@@ -31,7 +31,7 @@ import SwiftUI
 public struct Navigator: @unchecked Sendable {
 
     internal let environmentID: Int
-    internal let state: NavigationState
+    public let state: NavigationState
 
     public init(configuration: NavigationConfiguration) {
         let state = NavigationState(configuration: configuration)

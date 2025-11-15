@@ -19,7 +19,7 @@ public class NavigationState: ObservableObject, @unchecked Sendable {
     }
 
     /// Navigation path for the current ManagedNavigationStack
-    @Published internal var path: NavigationPath = .init() {
+    @Published public var path: NavigationPath = .init() {
         didSet {
             cleanCheckpoints()
             pathChangedCounter += 1
@@ -45,7 +45,7 @@ public class NavigationState: ObservableObject, @unchecked Sendable {
     internal var id: UUID = .init()
 
     /// Name of the current ManagedNavigationStack, if any.
-    internal var name: String? = nil
+    public var name: String? = nil
 
     /// Owner of this particular state object.
     internal var owner: Owner = .root
